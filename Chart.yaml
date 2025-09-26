@@ -1,0 +1,11 @@
+apiVersion: v2
+name: redis-observability
+description: Deploy redis_exporter with ServiceMonitor for Prometheus
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: prometheus-redis-exporter
+    version: 6.17.0
+    repository: https://prometheus-community.github.io/helm-charts
