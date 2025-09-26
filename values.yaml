@@ -1,0 +1,69 @@
+# ----- core redis_exporter settings -----
+prometheus-redis-exporter:
+  # If your Redis requires auth, either embed it in redisAddress or use REDIS_PASSWORD below.
+  # Single target:
+  redisAddress: "redis://redis.default.svc.cluster.local:6379"
+
+  # If you have AUTH (password only):
+  # redisAddress: "redis://:YOUR_PASSWORD@redis.default.svc.cluster.local:6379"
+
+  # If you need username+password (Redis 6+ ACLs):
+  # redisAddress: "redis://USERNAME:PASS@redis.default.svc.cluster.local:6379"
+
+  # Environment-based secret option (alternative to embedding in URL)
+  env:
+    # Example: pull password from a Secret
+    # - name: REDIS_PASSWORD
+    #   valueFrom:
+    #     secretKeyRef:
+    #       name: redis-auth
+    #       key: password
+    []
+
+  # Extra exporter flags if you want (usually not needed)
+  extraArgs: []
+  # e.g. check specific keys: ["--check-keys=db:users,db:sessions"]
+
+  # Pod resources (tweak for your cluster)
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  # Service exposing /metrics
+  service:
+    type: ClusterIP
+    port: 9121
+    annotations: {}
+
+  # ----- ServiceMonitor so kube-prometheus-stack can scrape it -----
+  serviceMonitor:
+    enabled: true
+
+    # IMPORTANT: set this to the *release name* of your kube-prometheus-stack
+    # so Prometheus discovers it (because the Prometheus CR usually selects ServiceMonitors by this label).
+    # Common values: "kube-prometheus-stack" OR "prometheus" depending on how you installed.
+    labels:
+      release: kube-prometheus-stack
+
+    # Optional: if your Prometheus only scrapes within its own namespace, set this to that namespace.
+    # Otherwise leave blank to create in the same ns as exporter.
+    namespace: ""
+
+    interval: 30s
+    scrapeTimeout: 10s
+    honorLabels: true
+    relabelings: []
+    metricRelabelings: []
+
+  # If you run multiple Redis instances and want one exporter scraping many targets,
+  # some chart versions offer "multipleTarget" config; if you use it, list the targets here.
+  # NOTE: there have been issues in certain chart versions; prefer one exporter per instance unless needed.
+  # multipleTarget:
+  #   enabled: false
+  #   addresses:
+  #     - "redis://redis-0.redis.default.svc:6379"
+  #     - "redis://redis-1.redis.default.svc:6379"
